@@ -44,8 +44,6 @@ function buildForeground(scene) {
     transparent: false,
     flatShading: true
   });
-  // shading: THREE.FlatShading
-  // material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
   sphere = new THREE.Mesh( geometry, material );
 
   /* Lighting */
@@ -76,7 +74,6 @@ function buildBackground(scene) {
   buildSphericalStarfield(scene);
   ambientLight = new THREE.AmbientLight(0x555555);
   scene.add(ambientLight);
-  scene.background = new THREE.Color( 0x0c345c );
 }
 
 function updateBackground(scene) {
