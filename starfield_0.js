@@ -2,6 +2,7 @@ var camera, scene, renderer;
 var mouseX = 0;
 var mouseY = 0;
 var particles = new Array();
+var rings = new Array();
 var geometry;
 var material;
 var sphere;
@@ -60,6 +61,8 @@ function buildForeground(scene) {
   scene.add( light1 );
   scene.add( light2 );
   scene.add( sphere );
+
+  buildRings(scene);
 }
 
 function updateForeground(scene) {
@@ -138,6 +141,35 @@ function updateSphericalStarfield(scene) {
       p.position.z += scalar_speed;
     }
   });
+}
+
+function buildRings(scene) {
+  var ring_thickness = 2;
+  var base_radius = 130;
+  var radius_set = [base_radius, base_radius*2.5, base_radius*3.0, base_radius*6, base_radius*10];
+  var material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  var geometry, mesh;
+
+  for(var i = 0; i < radius_set.length; i++) {
+    mesh = new THREE.Mesh(
+      new THREE.RingGeometry(
+        radius_set[i],
+        radius_set[i] - calcThickness(ring_thickness, i),
+        32
+      ),
+      material
+    );
+    rings.push(mesh);
+    scene.add(mesh);
+  }
+}
+
+function calcThickness(base_factor, index) {
+  if (index > 1) {
+    return base_factor * Math.log(index);
+  } else {
+    return 1;
+  }
 }
 
 function updateCamera(scene) {
