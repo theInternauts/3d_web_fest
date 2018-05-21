@@ -13,7 +13,7 @@ var ambientLight;
 var ORIGIN = new THREE.Vector3(0,0,0);
 var MAXIMUM_THRESHOLD = 1000;
 var MINIMUM_THRESHOLD = -1000;
-var CAMERA_DISTANCE = 200;
+var CAMERA_DISTANCE = 500;
 
 
 
@@ -21,7 +21,7 @@ var CAMERA_DISTANCE = 200;
 function init(root) {
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+  camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 2000 );
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize( window.innerWidth, window.innerHeight );
@@ -71,50 +71,52 @@ function updateForeground(scene) {
 }
 
 function buildBackground(scene) {
-  // var particle, material;
-  // var PI2 = Math.PI * 2;
-  // for(var i = MINIMUM_THRESHOLD; i < MINIMUM_THRESHOLD; i+=20) {
-  //   material = new THREE.SpriteCanvasMaterial({
-  //     color: 0xffffff,
-  //     program: function ( context ) {
-  //       context.beginPath();
-  //       context.arc( 0, 0, 0.5, 0, PI2, true );
-  //       context.fill();
-  //     }
-  //   });
-  //   particle = new THREE.Sprite(material);
 
-  //   particle.position.x = Math.Random()*window.innerWidth - window.innerWidth/2
-  //   particle.position.y = Math.Random()*window.innerHeight - window.innerHeight/2
-  //   particle.position.z = i;
-
-  //   particle.scale.x = particle.scale.y = 10;
-
-  //   scene.add(particle);
-  //   particles.push(particle);
-  // }
+  buildPointStarfield(scene);
   ambientLight = new THREE.AmbientLight(0x555555);
   scene.add(ambientLight);
   scene.background = new THREE.Color( 0x0c345c );
-  // This will add a starfield to the background of a scene
-  var starsGeometry = new THREE.Geometry();
-
-  for ( var i = 0; i < 10000; i ++ ) {
-    var star = new THREE.Vector3();
-    star.x = THREE.Math.randFloatSpread( 2000 );
-    star.y = THREE.Math.randFloatSpread( 2000 );
-    star.z = THREE.Math.randFloatSpread( 2000 );
-
-    starsGeometry.vertices.push( star );
-  }
-
-  var starsMaterial = new THREE.PointsMaterial( { color: 0x888888 } );
-  var starField = new THREE.Points( starsGeometry, starsMaterial );
-
-  scene.add( starField );
 }
 
 function updateBackground(scene) {
+
+}
+
+function buildPointStarfield(scene) {
+  var particle, material, particleMesh, geometry;
+  geometry = new THREE.Geometry();
+  material = new THREE.PointsMaterial({color: 0xffffff});
+
+  h_width = window.innerWidth/2;
+  h_height = window.innerHeight/2;
+  depth = MAXIMUM_THRESHOLD - MINIMUM_THRESHOLD;
+
+  for(var i = MINIMUM_THRESHOLD; i < MAXIMUM_THRESHOLD; i++) {
+    particle = new THREE.Vector3();
+
+    particle.x = Math.random() * window.innerWidth - h_width;
+    particle.y = Math.random() * window.innerHeight - h_height;
+    particle.z = Math.random() * depth - (depth/2);
+
+    geometry.vertices.push(particle);
+    particles.push(particle);
+
+  }
+  particleMesh = new THREE.Points( geometry, material );
+  scene.add(particleMesh);
+  // This will add a starfield to the background of a scene
+  // for ( var i = 0; i < 10000; i ++ ) {
+  //   var star = new THREE.Vector3();
+  //   particle.x = THREE.Math.randFloatSpread( 2000 );
+  //   particle.y = THREE.Math.randFloatSpread( 2000 );
+  //   particle.z = THREE.Math.randFloatSpread( 2000 );
+
+  //   geometry.vertices.push( star );
+  // }
+
+}
+
+function buildSphericalStarfield(scene) {
 
 }
 
