@@ -80,6 +80,7 @@ function buildBackground(scene) {
 }
 
 function updateBackground(scene) {
+  updateSphericalStarfield(scene);
 }
 
 function buildPointStarfield(scene) {
@@ -127,6 +128,19 @@ function buildSphericalStarfield(scene) {
     particles.push(particle);
     scene.add(particle);
   }
+}
+
+function updateSphericalStarfield(scene) {
+  var scalar_speed = 1;
+  particles.forEach(function(p){
+    if(p.position.z > MAXIMUM_THRESHOLD) {
+      p.position.z = MINIMUM_THRESHOLD;
+    } else if(p.position.z < MINIMUM_THRESHOLD) {
+      p.position.z = MAXIMUM_THRESHOLD;
+    } else {
+      p.position.z += scalar_speed;
+    }
+  });
 }
 
 function updateCamera(scene) {
