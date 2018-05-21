@@ -72,14 +72,14 @@ function updateForeground(scene) {
 
 function buildBackground(scene) {
 
-  buildPointStarfield(scene);
+  // buildPointStarfield(scene);
+  buildSphericalStarfield(scene);
   ambientLight = new THREE.AmbientLight(0x555555);
   scene.add(ambientLight);
   scene.background = new THREE.Color( 0x0c345c );
 }
 
 function updateBackground(scene) {
-
 }
 
 function buildPointStarfield(scene) {
@@ -87,9 +87,9 @@ function buildPointStarfield(scene) {
   geometry = new THREE.Geometry();
   material = new THREE.PointsMaterial({color: 0xffffff});
 
-  h_width = window.innerWidth/2;
-  h_height = window.innerHeight/2;
-  depth = MAXIMUM_THRESHOLD - MINIMUM_THRESHOLD;
+  var h_width = window.innerWidth/2;
+  var h_height = window.innerHeight/2;
+  var depth = MAXIMUM_THRESHOLD - MINIMUM_THRESHOLD;
 
   for(var i = MINIMUM_THRESHOLD; i < MAXIMUM_THRESHOLD; i++) {
     particle = new THREE.Vector3();
@@ -104,20 +104,29 @@ function buildPointStarfield(scene) {
   }
   particleMesh = new THREE.Points( geometry, material );
   scene.add(particleMesh);
-  // This will add a starfield to the background of a scene
-  // for ( var i = 0; i < 10000; i ++ ) {
-  //   var star = new THREE.Vector3();
-  //   particle.x = THREE.Math.randFloatSpread( 2000 );
-  //   particle.y = THREE.Math.randFloatSpread( 2000 );
-  //   particle.z = THREE.Math.randFloatSpread( 2000 );
-
-  //   geometry.vertices.push( star );
-  // }
-
 }
 
 function buildSphericalStarfield(scene) {
+  var particle, material, particleMesh, geometry;
+  geometry = new THREE.SphereGeometry(1, 8, 8);
+  material = new THREE.MeshBasicMaterial({color: 0xffffff});
 
+  var h_width = window.innerWidth/2;
+  var h_height = window.innerHeight/2;
+  var depth = MAXIMUM_THRESHOLD - MINIMUM_THRESHOLD;
+
+  for(var i = MINIMUM_THRESHOLD; i < MAXIMUM_THRESHOLD; i++) {
+    particle = new THREE.Mesh( geometry, material );
+
+    particle.scale.x = particle.scale.y = particle.scale.z = Math.random() * 1.2;
+
+    particle.position.x = Math.random() * window.innerWidth - h_width;
+    particle.position.y = Math.random() * window.innerHeight - h_height;
+    particle.position.z = Math.random() * depth - (depth/2);
+
+    particles.push(particle);
+    scene.add(particle);
+  }
 }
 
 function updateCamera(scene) {
