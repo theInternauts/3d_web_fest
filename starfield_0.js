@@ -31,6 +31,7 @@ function init(root) {
 
   buildForeground(scene);
   buildBackground(scene);
+  initWindowEvents(scene);
   initMouseEvents(scene);
 
   animate();
@@ -128,11 +129,21 @@ function initMouseEvents(scene) {
   document.addEventListener( 'mousemove', onMouseMove, false );
 }
 
+function initWindowEvents(scene){
+  window.addEventListener('resize', onWindowResize, false);
+}
+
 function onMouseMove(event) {
   var factor = 1000;
   mouseX = factor * ((event.clientX / window.innerWidth) - 0.5);
   mouseY = factor * ((event.clientY / window.innerHeight) - 0.5);
   // window.console.log(mouseX, mouseY);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 animate = function () {
