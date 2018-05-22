@@ -131,7 +131,7 @@ function buildSphericalStarfield(scene) {
 }
 
 function updateSphericalStarfield(scene) {
-  var scalar_speed = 1;
+  var scalar_speed = 0.05;
   particles.forEach(function(p){
     if(p.position.z > MAXIMUM_THRESHOLD) {
       p.position.z = MINIMUM_THRESHOLD;
