@@ -3,6 +3,7 @@ var mouseX = 0;
 var mouseY = 0;
 var particles = new Array();
 var rings = new Array();
+var waves = new Array();
 var geometry;
 var material;
 var sphere;
@@ -10,6 +11,9 @@ var animate;
 var light1;
 var light2;
 var ambientLight;
+var light1_color = 0xff1100;
+var light2_color = 0x00bcd4;
+var ambientLight_color = 0x222222;
 
 var ORIGIN = new THREE.Vector3(0,0,0);
 var MAXIMUM_THRESHOLD = 1000;
@@ -39,7 +43,7 @@ function init(root) {
 }
 
 function buildForeground(scene) {
-  geometry = new THREE.SphereGeometry( 100, 32, 32 );
+  buildForegroundGeometry(scene);
   material = new THREE.MeshPhongMaterial({
     color: 0xffffff,
     transparent: false,
@@ -49,14 +53,14 @@ function buildForeground(scene) {
 
   /* Lighting */
   var lightSphere = new THREE.SphereGeometry( 10, 8, 8 );
-  light1 = new THREE.DirectionalLight( 0xff0040, 1 );
+  light1 = new THREE.DirectionalLight( light1_color, 1 );
   light1.castShadow = true;
   light1.position.set( 300, 300, 300 );
-  light1.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: 0xff0040 } ) ) );
-  light2 = new THREE.DirectionalLight( 0x0040ff, 1 );
+  light1.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light1_color } ) ) );
+  light2 = new THREE.DirectionalLight( light2_color, 1 );
   light2.castShadow = true;
   light2.position.set( -300, -300, -300 );
-  light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: 0x0040ff } ) ) );
+  light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light2_color } ) ) );
 
   scene.add( light1 );
   scene.add( light2 );
@@ -68,6 +72,7 @@ function buildForeground(scene) {
 function updateForeground(scene) {
   sphere.rotation.y += 0.002;
   updateCamera(scene);
+  updateForegroundGeometry(scene);
 
 }
 
@@ -75,7 +80,7 @@ function buildBackground(scene) {
 
   // buildPointStarfield(scene);
   buildSphericalStarfield(scene);
-  ambientLight = new THREE.AmbientLight(0x555555);
+  ambientLight = new THREE.AmbientLight(ambientLight_color);
   scene.add(ambientLight);
 }
 
@@ -128,6 +133,65 @@ function buildSphericalStarfield(scene) {
     particles.push(particle);
     scene.add(particle);
   }
+}
+
+function buildForegroundGeometry(scene) {
+  geometry = new THREE.IcosahedronGeometry(100, 3);
+  geometry.mergeVertices();
+
+  // get the vertices
+  var l = geometry.vertices.length;
+
+  // create an array to store new data associated to each vertex
+  // waves = [];
+
+  for (var i=0; i<l; i++){
+    // get each vertex
+    var v = geometry.vertices[i];
+
+    // store some data associated to it
+    waves.push({y:v.y,
+               x:v.x,
+               z:v.z,
+               // a random angle
+               // ang:Math.random()*Math.PI*2,
+               ang:0,
+               // a random distance
+               // amp:5 + Math.random()*15,
+               amp:5,
+               // a random speed between 0.016 and 0.048 radians / frame
+               speed:0.016 + Math.random()*0.032
+              });
+  };
+}
+
+function updateForegroundGeometry(scene) {
+  // get the vertices
+  var verts = sphere.geometry.vertices;
+  var l = verts.length;
+
+  for (var i=0; i<l; i++){
+    var v = verts[i];
+
+    // get the data associated to it
+    var vprops = waves[i];
+
+    // update the position of the vertex
+    // v.x = vprops.x + Math.cos(vprops.ang)*vprops.amp;
+    // v.y = vprops.y + Math.sin(vprops.ang)*vprops.amp;
+    v.z = vprops.z + Math.sin(vprops.ang);
+    // v.z = vprops.z + (Math.random()*vprops.amp - 0.5);
+
+    // increment the angle for the next frame
+    vprops.ang += vprops.speed;
+
+  }
+
+  // Tell the renderer that the geometry of the sphere has changed.
+  // In fact, in order to maintain the best level of performance,
+  // three.js caches the geometries and ignores any changes
+  // unless we add this line
+  sphere.geometry.verticesNeedUpdate=true;
 }
 
 function updateSphericalStarfield(scene) {
