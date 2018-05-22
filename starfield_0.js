@@ -145,20 +145,29 @@ function updateSphericalStarfield(scene) {
 
 function buildRings(scene) {
   var ring_thickness = 2;
-  var base_radius = 130;
-  var radius_set = [base_radius, base_radius*2.5, base_radius*3.0, base_radius*6, base_radius*10];
+  var base_radius = 120;
+  var radius_set = [
+    [base_radius, [0, 0.174533, 0]],
+    [base_radius*1.8, [0.349066, 0, 0]],
+    [base_radius*3.1, [-0.523599, 0.0872665, 0]],
+    [base_radius*4.0, [-0.610865, 0, 0]],
+    [base_radius*8, [-0.174533, 0, 0]]
+  ];
   var material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
   var geometry, mesh;
 
   for(var i = 0; i < radius_set.length; i++) {
     mesh = new THREE.Mesh(
       new THREE.RingGeometry(
-        radius_set[i],
-        radius_set[i] - calcThickness(ring_thickness, i),
+        radius_set[i][0],
+        radius_set[i][0] - calcThickness(ring_thickness, i),
         32
       ),
       material
     );
+    mesh.rotation.x = radius_set[i][1][0];
+    mesh.rotation.y = radius_set[i][1][1];
+    mesh.rotation.z = radius_set[i][1][2];
     rings.push(mesh);
     scene.add(mesh);
   }
@@ -166,7 +175,7 @@ function buildRings(scene) {
 
 function calcThickness(base_factor, index) {
   if (index > 1) {
-    return base_factor * Math.log(index);
+    return base_factor * Math.log(index) + 1;
   } else {
     return 1;
   }
