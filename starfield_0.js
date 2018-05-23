@@ -12,8 +12,8 @@ var light1;
 var light2;
 var ambientLight;
 var light1_color = 0xff1100;
-var light2_color = 0x00bcd4;
-var ambientLight_color = 0x222222;
+var light2_color = 0x007ab9;
+var ambientLight_color = 0x000000;
 
 var ORIGIN = new THREE.Vector3(0,0,0);
 var MAXIMUM_THRESHOLD = 1000;
@@ -50,20 +50,7 @@ function buildForeground(scene) {
     flatShading: true
   });
   sphere = new THREE.Mesh( geometry, material );
-
-  /* Lighting */
-  var lightSphere = new THREE.SphereGeometry( 10, 8, 8 );
-  light1 = new THREE.DirectionalLight( light1_color, 1 );
-  light1.castShadow = true;
-  light1.position.set( 300, 300, 300 );
-  light1.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light1_color } ) ) );
-  light2 = new THREE.DirectionalLight( light2_color, 1 );
-  light2.castShadow = true;
-  light2.position.set( -300, -300, -300 );
-  light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light2_color } ) ) );
-
-  scene.add( light1 );
-  scene.add( light2 );
+  buildForegroundLights(scene);
   scene.add( sphere );
 
   buildRings(scene);
@@ -86,6 +73,27 @@ function buildBackground(scene) {
 
 function updateBackground(scene) {
   updateSphericalStarfield(scene);
+}
+
+function buildForegroundLights(scene) {
+  /* Lighting */
+  var lightSphere = new THREE.SphereGeometry( 10, 8, 8 );
+  // light1 = new THREE.DirectionalLight( light1_color, 1 );
+  light1 = new THREE.PointLight( light1_color, 20, 2500 );
+  light1.castShadow = true;
+
+  // Cpoint(90,30)
+  light1.position.set(975, 562.916512459885, 6.893739051711894e-14);
+  // light1.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light1_color } ) ) );
+  // light2 = new THREE.DirectionalLight( light2_color, 1 );
+  light2 = new THREE.PointLight( light2_color, 5, 2500 );
+  light2.castShadow = true;
+  // Cpoint(-70,-10)
+  light2.position.set(-1041.8645457690877, 183.70882966265955, 385.0575725438311);
+  // light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light2_color } ) ) );
+
+  scene.add( light1 );
+  scene.add( light2 );
 }
 
 function buildPointStarfield(scene) {
@@ -158,7 +166,7 @@ function buildForegroundGeometry(scene) {
                ang:0,
                // a random distance
                // amp:5 + Math.random()*15,
-               amp:5,
+               amp:1.5,
                // a random speed between 0.016 and 0.048 radians / frame
                speed:0.016 + Math.random()*0.032
               });
@@ -179,7 +187,7 @@ function updateForegroundGeometry(scene) {
     // update the position of the vertex
     // v.x = vprops.x + Math.cos(vprops.ang)*vprops.amp;
     // v.y = vprops.y + Math.sin(vprops.ang)*vprops.amp;
-    v.z = vprops.z + Math.sin(vprops.ang);
+    v.z = vprops.z + Math.sin(vprops.ang)*vprops.amp;
     // v.z = vprops.z + (Math.random()*vprops.amp - 0.5);
 
     // increment the angle for the next frame
@@ -271,6 +279,16 @@ function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function Cpoint(inc, azi, radius){
+  // util for debgging
+  if(radius == null || radius === undefined){
+    var radius = Math.sqrt((650*650)*3)
+  }
+  function toR(deg){ return (deg*Math.PI)/180};
+
+  return [radius*Math.sin(toR(inc))*Math.cos(toR(azi)), radius*Math.sin(toR(inc))*Math.sin(toR(azi)), radius*Math.cos(toR(inc))];
 }
 
 animate = function () {
