@@ -9,3 +9,4 @@
 [ ] bloom
 [ ] camera dolly path
 [ ] nebulous clouds?
+[x] video overlay?

@@ -77,14 +77,24 @@ function updateBackground(scene) {
 
 function buildForegroundLights(scene) {
   /* Lighting */
-  var lightSphere = new THREE.SphereGeometry( 10, 8, 8 );
-  // light1 = new THREE.DirectionalLight( light1_color, 1 );
   light1 = new THREE.PointLight( light1_color, 20, 2500 );
-  light1.castShadow = true;
-
   // Cpoint(90,30)
   light1.position.set(975, 562.916512459885, 6.893739051711894e-14);
-  // light1.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light1_color } ) ) );
+  light1.castShadow = true;
+
+  // var lightSphere = new THREE.SphereGeometry( 50, 8, 8 );
+  // light1_bloom = new THREE.DirectionalLight( light1_color, 1 );
+  // light1_bloom.add( new THREE.Mesh(
+  //     lightSphere,
+  //     new THREE.MeshBasicMaterial({
+  //       color: light1_color,
+  //       opactiy: 0.1,
+  //       transparent: true
+  //     })
+  //   )
+  // );
+  // Cpoint(90, 30, 1300)
+  // light1_bloom.position.set(200, 200, 200);
   // light2 = new THREE.DirectionalLight( light2_color, 1 );
   light2 = new THREE.PointLight( light2_color, 5, 2500 );
   light2.castShadow = true;
@@ -92,6 +102,7 @@ function buildForegroundLights(scene) {
   light2.position.set(-1041.8645457690877, 183.70882966265955, 385.0575725438311);
   // light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light2_color } ) ) );
 
+  // scene.add( light1_bloom );
   scene.add( light1 );
   scene.add( light2 );
 }
