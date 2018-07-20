@@ -8,6 +8,8 @@ var geometry;
 var material;
 var sphere;
 var animate;
+var planeMesh;
+var cssObject;
 var light1;
 var light2;
 var ambientLight;
@@ -21,20 +23,70 @@ var MINIMUM_THRESHOLD = -1000;
 var CAMERA_DISTANCE = 500;
 
 
+function ready(fn, args) {
+  if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
+    fn.apply(this, args);
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){
+      fn.apply(this, args);
+    });
+  }
+}
 
+function buildGLRenderer() {
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setClearColor(0x0c345c);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  renderer.domElement.style.position = 'absolute';
+  renderer.domElement.style.zIndex = 1;
+  renderer.domElement.style.top = 0;
+  renderer.domElement.style.left = 0;
+  renderer.domElement.id = "C_GL";
+
+  return renderer;
+}
+
+function buildCSSRenderer() {
+  var renderer2 = new THREE.CSS3DRenderer();
+  renderer2.setSize( window.innerWidth, window.innerHeight );
+
+  renderer2.domElement.style.position = 'absolute';
+  renderer2.domElement.style.zIndex = 0;
+  renderer2.domElement.style.top = 0;
+  renderer2.domElement.style.left = 0;
+  renderer2.domElement.id = "C_CSS";
+
+  return renderer2;
+}
+
+function buildCamera() {
+  var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 2000 );
+  camera.position.z = CAMERA_DISTANCE;
+
+  return camera;
+}
 
 function init(root) {
+  window.console.log("yep", root);
+  window.root = root;
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 2000 );
+  renderer = buildGLRenderer();
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  root.appendChild( renderer.domElement );
-  camera.position.z = CAMERA_DISTANCE;
+  scene2 = new THREE.Scene();
+  renderer2 = buildCSSRenderer();
+
+  // root.appendChild( renderer.domElement );
+  // renderer.domElement.appendChild( renderer2.domElement );
+  root.appendChild( renderer2.domElement );
+  renderer2.domElement.appendChild( renderer.domElement );
+
+  camera = buildCamera();
   camera.lookAt(scene.position);
 
-  buildForeground(scene);
+  buildForeground(scene, scene2);
   buildBackground(scene);
   initWindowEvents(scene);
   initMouseEvents(scene);
@@ -42,7 +94,7 @@ function init(root) {
   animate();
 }
 
-function buildForeground(scene) {
+function buildForeground(scene, scene2) {
   buildForegroundGeometry(scene);
   material = new THREE.MeshPhongMaterial({
     color: 0xffffff,
@@ -50,6 +102,7 @@ function buildForeground(scene) {
     flatShading: true
   });
   sphere = new THREE.Mesh( geometry, material );
+  buildForegroundPanel(scene, scene2);
   buildForegroundLights(scene);
   scene.add( sphere );
 
@@ -58,13 +111,19 @@ function buildForeground(scene) {
 
 function updateForeground(scene) {
   sphere.rotation.y += 0.002;
-  updateCamera(scene);
-  updateForegroundGeometry(scene);
+  // planeMesh.rotation.y = sphere.rotation;
+  // planeMesh.rotation.y += 0.002;
+  planeMesh.rotation.copy(sphere.rotation);
+  // planeMesh.rotateY(0.002);
+  cssObject.position.copy(planeMesh.position);
+  cssObject.rotation.copy(planeMesh.rotation);
+
+  updateCamera();
+  updateForegroundGeometry();
 
 }
 
 function buildBackground(scene) {
-
   // buildPointStarfield(scene);
   buildSphericalStarfield(scene);
   ambientLight = new THREE.AmbientLight(ambientLight_color);
@@ -73,6 +132,57 @@ function buildBackground(scene) {
 
 function updateBackground(scene) {
   updateSphericalStarfield(scene);
+}
+
+function createPanel() {
+  new_info = document.createElement( 'div' );
+  new_info.id = "info";
+  new_info.classList.add("info");
+
+  var div1 = document.createElement( 'div' );
+  div1.classList.add("title-block");
+  div1.innerText = "3d Web Fest";
+  var div2 = document.createElement( 'div' );
+  div2.classList.add("tagline");
+  div2.innerText = "The Shift is on";
+
+  new_info.appendChild( div1 );
+  new_info.appendChild( div2 );
+
+  return new_info;
+}
+
+function buildForegroundPanel(scene1, scene2) {
+  // create the plane mesh
+  var material = new THREE.MeshBasicMaterial({
+    wireframe: false,
+    opacity: 0.0,
+    side: THREE.DoubleSide
+  });
+
+  // material.color.set('yellow')
+  // material.opacity   = 0.5;
+  // material.blending  = THREE.NoBlending;
+
+  var geometry = new THREE.PlaneGeometry(500,300);
+  planeMesh = new THREE.Mesh( geometry, material );
+  planeMesh.position.y -= 375;
+  scene1.add(planeMesh);
+
+  // create the dom Element
+  // need to delay this call.  need all scripts to fire after DOM ready
+  // element_i = document.getElementById('info');
+
+  // create the object3d for this element
+  var _p = createPanel();
+  // var _p = document.getElementById('video-block');
+  // _p.remove();
+  cssObject = new THREE.CSS3DObject( _p );
+  // we reference the same position and rotation
+  cssObject.position.copy(planeMesh.position);
+  cssObject.rotation.copy(planeMesh.rotation);
+  // add it to the css scene
+  scene2.add(cssObject);
 }
 
 function buildForegroundLights(scene) {
@@ -184,7 +294,7 @@ function buildForegroundGeometry(scene) {
   };
 }
 
-function updateForegroundGeometry(scene) {
+function updateForegroundGeometry() {
   // get the vertices
   var verts = sphere.geometry.vertices;
   var l = verts.length;
@@ -264,7 +374,7 @@ function calcThickness(base_factor, index) {
   }
 }
 
-function updateCamera(scene) {
+function updateCamera() {
   camera.position.x = mouseX;
   camera.position.y = mouseY;
   camera.position.z = CAMERA_DISTANCE;
@@ -287,9 +397,11 @@ function onMouseMove(event) {
 }
 
 function onWindowResize() {
+  renderer.setPixelRatio(window.devicePixelRatio);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer2.setSize(window.innerWidth, window.innerHeight);
 }
 
 function Cpoint(inc, azi, radius){
@@ -303,12 +415,14 @@ function Cpoint(inc, azi, radius){
 }
 
 animate = function () {
-  requestAnimationFrame(animate);
 
   updateForeground(scene);
   updateBackground(scene);
 
+  renderer2.render(scene2, camera);
   renderer.render(scene, camera);
+
+  requestAnimationFrame(animate);
 };
 
-init(document.body);
+ready(init, [document.body]);
