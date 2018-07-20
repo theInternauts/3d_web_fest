@@ -113,10 +113,10 @@ function updateForeground(scene) {
   sphere.rotation.y += 0.002;
   // planeMesh.rotation.y = sphere.rotation;
   // planeMesh.rotation.y += 0.002;
-  planeMesh.rotation.copy(sphere.rotation);
+  // planeMesh.rotation.copy(sphere.rotation);
   // planeMesh.rotateY(0.002);
-  cssObject.position.copy(planeMesh.position);
-  cssObject.rotation.copy(planeMesh.rotation);
+  // cssObject.position.copy(planeMesh.position);
+  // cssObject.rotation.copy(planeMesh.rotation);
 
   updateCamera();
   updateForegroundGeometry();
@@ -157,16 +157,16 @@ function buildForegroundPanel(scene1, scene2) {
   var material = new THREE.MeshBasicMaterial({
     wireframe: false,
     opacity: 0.0,
-    side: THREE.DoubleSide
+    color: 0x00
   });
 
-  // material.color.set('yellow')
+  // material.color.set('0c345c')
   // material.opacity   = 0.5;
   // material.blending  = THREE.NoBlending;
 
-  var geometry = new THREE.PlaneGeometry(500,300);
+  var geometry = new THREE.PlaneGeometry(220, 125);
   planeMesh = new THREE.Mesh( geometry, material );
-  planeMesh.position.y -= 375;
+  planeMesh.position.y -= 200;
   scene1.add(planeMesh);
 
   // create the dom Element
@@ -180,7 +180,7 @@ function buildForegroundPanel(scene1, scene2) {
   cssObject = new THREE.CSS3DObject( _p );
   // we reference the same position and rotation
   cssObject.position.copy(planeMesh.position);
-  cssObject.rotation.copy(planeMesh.rotation);
+  // cssObject.rotation.copy(planeMesh.rotation);
   // add it to the css scene
   scene2.add(cssObject);
 }

@@ -5,7 +5,7 @@
 [x] point lights
 [x] 5 orbit rings
 [x] animate material axis points
-[ ] text panel "3D WEB FEST" "THE SHIFT IS ON"
+[x] text panel "3D WEB FEST" "THE SHIFT IS ON"
 [ ] bloom
 [ ] camera dolly path
 [ ] nebulous clouds?
