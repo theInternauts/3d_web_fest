@@ -35,7 +35,7 @@ function ready(fn, args) {
 
 function buildGLRenderer() {
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setClearColor(0x0c345c);
+  // renderer.setClearColor(0x0c345c);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize( window.innerWidth, window.innerHeight );
 
