@@ -402,7 +402,7 @@ App.prototype.onWindowResize = function() {
   this.renderer_GL.setPixelRatio(window.devicePixelRatio);
   this.camera.aspect = window.innerWidth / window.innerHeight;
   this.camera.updateProjectionMatrix();
-  this.renderer.setSize(window.innerWidth, window.innerHeight);
+  this.renderer_GL.setSize(window.innerWidth, window.innerHeight);
   this.renderer_CSS3D.setSize(window.innerWidth, window.innerHeight);
 }
 
