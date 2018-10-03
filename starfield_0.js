@@ -1,26 +1,3 @@
-var camera, scene, renderer;
-var mouseX = 0;
-var mouseY = 0;
-var particles = new Array();
-var rings = new Array();
-var waves = new Array();
-var geometry;
-var material;
-var sphere;
-var animate;
-var planeMesh;
-var cssObject;
-var light1;
-var light2;
-var ambientLight;
-var light1_color = 0xff1100;
-var light2_color = 0x007ab9;
-var ambientLight_color = 0x000000;
-
-var ORIGIN = new THREE.Vector3(0,0,0);
-var MAXIMUM_THRESHOLD = 1000;
-var MINIMUM_THRESHOLD = -1000;
-var CAMERA_DISTANCE = 500;
 
 
 function ready(fn, args) {
@@ -33,7 +10,65 @@ function ready(fn, args) {
   }
 }
 
-function buildGLRenderer() {
+function start(root) {
+  window.app = new App(root);
+}
+
+function App(root) {
+  this.CONSTANTS = {
+    ORIGIN: new THREE.Vector3(0,0,0),
+    MAXIMUM_THRESHOLD: 1000,
+    MINIMUM_THRESHOLD: -1000,
+    CAMERA_DISTANCE: 500
+  }
+  this.root = root;
+
+
+  window.console.log("yep", this.root);
+  window.root = this.root;
+
+  this.init();
+  this.animate();
+};
+
+App.prototype.init = function() {
+  this.camera;
+  this.mouseX = 0;
+  this.mouseY = 0;
+  // this.geometry;
+  // this.material;
+  // this.sphere;
+  // this.animate;
+  // this.planeMesh;
+  // this.cssObject;
+  this.light1;
+  this.light2;
+  // this.ambientLight;
+  this.light1_color = 0xff1100;
+  this.light2_color = 0x007ab9;
+  this.ambientLight_color = 0x000000;
+
+  this.scene_GL = new THREE.Scene();
+  this.renderer_GL = this.buildGLRenderer();
+
+  this.scene_CSS3D = new THREE.Scene();
+  this.renderer_CSS3D = this.buildCSSRenderer();
+
+  this.foreground = new Foreground(this.scene_GL, this.scene_CSS3D);
+  this.background = new Background(this.scene_GL, this.scene_CSS3D);
+
+  this.root.appendChild( this.renderer_CSS3D.domElement );
+  this.renderer_CSS3D.domElement.appendChild( this.renderer_GL.domElement );
+
+  this.camera = this.buildCamera();
+  this.camera.lookAt(this.scene_GL.position);
+
+  this.buildForeground(this.foreground);
+  this.buildBackground(this.background);
+  this.initWindowEvents(this.scene_GL);
+  this.initMouseEvents(this.scene_GL);
+};
+App.prototype.buildGLRenderer = function() {
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   // renderer.setClearColor(0x0c345c);
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -48,94 +83,60 @@ function buildGLRenderer() {
   return renderer;
 }
 
-function buildCSSRenderer() {
-  var renderer2 = new THREE.CSS3DRenderer();
-  renderer2.setSize( window.innerWidth, window.innerHeight );
+App.prototype.buildCSSRenderer = function() {
+  var renderer_CSS3D = new THREE.CSS3DRenderer();
+  renderer_CSS3D.setSize( window.innerWidth, window.innerHeight );
 
-  renderer2.domElement.style.position = 'absolute';
-  renderer2.domElement.style.zIndex = 0;
-  renderer2.domElement.style.top = 0;
-  renderer2.domElement.style.left = 0;
-  renderer2.domElement.id = "C_CSS";
+  renderer_CSS3D.domElement.style.position = 'absolute';
+  renderer_CSS3D.domElement.style.zIndex = 0;
+  renderer_CSS3D.domElement.style.top = 0;
+  renderer_CSS3D.domElement.style.left = 0;
+  renderer_CSS3D.domElement.id = "C_CSS";
 
-  return renderer2;
+  return renderer_CSS3D;
 }
 
-function buildCamera() {
+App.prototype.buildCamera = function() {
   var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 2000 );
-  camera.position.z = CAMERA_DISTANCE;
+  camera.position.z = this.CONSTANTS.CAMERA_DISTANCE;
 
   return camera;
 }
 
-function init(root) {
-  window.console.log("yep", root);
-  window.root = root;
-
-  scene = new THREE.Scene();
-  renderer = buildGLRenderer();
-
-  scene2 = new THREE.Scene();
-  renderer2 = buildCSSRenderer();
-
-  // root.appendChild( renderer.domElement );
-  // renderer.domElement.appendChild( renderer2.domElement );
-  root.appendChild( renderer2.domElement );
-  renderer2.domElement.appendChild( renderer.domElement );
-
-  camera = buildCamera();
-  camera.lookAt(scene.position);
-
-  buildForeground(scene, scene2);
-  buildBackground(scene);
-  initWindowEvents(scene);
-  initMouseEvents(scene);
-
-  animate();
-}
-
-function buildForeground(scene, scene2) {
-  buildForegroundGeometry(scene);
-  material = new THREE.MeshPhongMaterial({
+App.prototype.buildForeground = function(foreground) {
+  foreground.geometry = this.buildForegroundGeometry(foreground);
+  var material = new THREE.MeshPhongMaterial({
     color: 0xffffff,
     transparent: false,
     flatShading: true
   });
-  sphere = new THREE.Mesh( geometry, material );
-  buildForegroundPanel(scene, scene2);
-  buildForegroundLights(scene);
-  scene.add( sphere );
+  foreground.sphere = new THREE.Mesh( foreground.geometry, material );
+  this.buildForegroundPanel(foreground);
+  this.buildForegroundLights(foreground);
+  foreground.scene_GL.add( foreground.sphere );
 
-  buildRings(scene);
+  this.buildRings(foreground);
 }
 
-function updateForeground(scene) {
-  sphere.rotation.y += 0.002;
-  // planeMesh.rotation.y = sphere.rotation;
-  // planeMesh.rotation.y += 0.002;
-  // planeMesh.rotation.copy(sphere.rotation);
-  // planeMesh.rotateY(0.002);
-  // cssObject.position.copy(planeMesh.position);
-  // cssObject.rotation.copy(planeMesh.rotation);
+App.prototype.updateForeground = function(foreground) {
+  foreground.sphere.rotation.y += 0.002;
 
-  updateCamera();
-  updateForegroundGeometry();
-
+  this.updateForegroundGeometry(foreground);
 }
 
-function buildBackground(scene) {
-  // buildPointStarfield(scene);
-  buildSphericalStarfield(scene);
-  ambientLight = new THREE.AmbientLight(ambientLight_color);
-  scene.add(ambientLight);
+App.prototype.buildBackground = function(background) {
+  // this.buildPointStarfield(background);
+  this.buildSphericalStarfield(background);
+  var ambientLight = new THREE.AmbientLight(this.ambientLight_color);
+  background.scene_GL.add(ambientLight);
 }
 
-function updateBackground(scene) {
-  updateSphericalStarfield(scene);
+App.prototype.updateBackground = function(background) {
+  this.updateSphericalStarfield(background);
 }
 
-function createPanel() {
-  new_info = document.createElement( 'div' );
+App.prototype.createPanel = function() {
+  var new_info = document.createElement( 'div' );
   new_info.id = "info";
   new_info.classList.add("info");
 
@@ -152,7 +153,7 @@ function createPanel() {
   return new_info;
 }
 
-function buildForegroundPanel(scene1, scene2) {
+App.prototype.buildForegroundPanel = function(foreground) {
   // create the plane mesh
   var material = new THREE.MeshBasicMaterial({
     wireframe: false,
@@ -165,68 +166,68 @@ function buildForegroundPanel(scene1, scene2) {
   // material.blending  = THREE.NoBlending;
 
   var geometry = new THREE.PlaneGeometry(220, 125);
-  planeMesh = new THREE.Mesh( geometry, material );
+  var planeMesh = new THREE.Mesh( geometry, material );
   planeMesh.position.y -= 200;
-  scene1.add(planeMesh);
+  foreground.scene_GL.add(planeMesh);
 
   // create the dom Element
   // need to delay this call.  need all scripts to fire after DOM ready
   // element_i = document.getElementById('info');
 
   // create the object3d for this element
-  var _p = createPanel();
+  var _p = this.createPanel();
   // var _p = document.getElementById('video-block');
   // _p.remove();
-  cssObject = new THREE.CSS3DObject( _p );
+  var cssObject = new THREE.CSS3DObject( _p );
   // we reference the same position and rotation
   cssObject.position.copy(planeMesh.position);
   // cssObject.rotation.copy(planeMesh.rotation);
   // add it to the css scene
-  scene2.add(cssObject);
+  foreground.scene_CSS3D.add(cssObject);
 }
 
-function buildForegroundLights(scene) {
+App.prototype.buildForegroundLights = function(foreground) {
   /* Lighting */
-  light1 = new THREE.PointLight( light1_color, 20, 2500 );
-  // Cpoint(90,30)
-  light1.position.set(975, 562.916512459885, 6.893739051711894e-14);
-  light1.castShadow = true;
+  this.light1 = new THREE.PointLight( this.light1_color, 20, 2500 );
+  // this.Cpoint(90,30)
+  this.light1.position.set(975, 562.916512459885, 6.893739051711894e-14);
+  this.light1.castShadow = true;
 
   // var lightSphere = new THREE.SphereGeometry( 50, 8, 8 );
-  // light1_bloom = new THREE.DirectionalLight( light1_color, 1 );
-  // light1_bloom.add( new THREE.Mesh(
+  // this.light1_bloom = new THREE.DirectionalLight( this.light1_color, 1 );
+  // this.light1_bloom.add( new THREE.Mesh(
   //     lightSphere,
   //     new THREE.MeshBasicMaterial({
-  //       color: light1_color,
+  //       color: this.light1_color,
   //       opactiy: 0.1,
   //       transparent: true
   //     })
   //   )
   // );
-  // Cpoint(90, 30, 1300)
-  // light1_bloom.position.set(200, 200, 200);
-  // light2 = new THREE.DirectionalLight( light2_color, 1 );
-  light2 = new THREE.PointLight( light2_color, 5, 2500 );
-  light2.castShadow = true;
-  // Cpoint(-70,-10)
-  light2.position.set(-1041.8645457690877, 183.70882966265955, 385.0575725438311);
-  // light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: light2_color } ) ) );
+  // this.Cpoint(90, 30, 1300)
+  // this.light1_bloom.position.set(200, 200, 200);
+  // this.light2 = new THREE.DirectionalLight( this.light2_color, 1 );
+  this.light2 = new THREE.PointLight( this.light2_color, 5, 2500 );
+  this.light2.castShadow = true;
+  // this.Cpoint(-70,-10)
+  this.light2.position.set(-1041.8645457690877, 183.70882966265955, 385.0575725438311);
+  // this.light2.add( new THREE.Mesh( lightSphere, new THREE.MeshBasicMaterial( { color: this.light2_color } ) ) );
 
-  // scene.add( light1_bloom );
-  scene.add( light1 );
-  scene.add( light2 );
+  // foreground.scene_GL.add( this.light1_bloom );
+  foreground.scene_GL.add( this.light1 );
+  foreground.scene_GL.add( this.light2 );
 }
 
-function buildPointStarfield(scene) {
+App.prototype.buildPointStarfield = function(background) {
   var particle, material, particleMesh, geometry;
   geometry = new THREE.Geometry();
   material = new THREE.PointsMaterial({color: 0xffffff});
 
   var h_width = window.innerWidth/2;
   var h_height = window.innerHeight/2;
-  var depth = MAXIMUM_THRESHOLD - MINIMUM_THRESHOLD;
+  var depth = this.CONSTANTS.MAXIMUM_THRESHOLD - this.CONSTANTS.MINIMUM_THRESHOLD;
 
-  for(var i = MINIMUM_THRESHOLD; i < MAXIMUM_THRESHOLD; i++) {
+  for(var i = this.CONSTANTS.MINIMUM_THRESHOLD; i < this.CONSTANTS.MAXIMUM_THRESHOLD; i++) {
     particle = new THREE.Vector3();
 
     particle.x = Math.random() * window.innerWidth - h_width;
@@ -234,23 +235,23 @@ function buildPointStarfield(scene) {
     particle.z = Math.random() * depth - (depth/2);
 
     geometry.vertices.push(particle);
-    particles.push(particle);
+    background.particles.push(particle);
 
   }
   particleMesh = new THREE.Points( geometry, material );
-  scene.add(particleMesh);
+  background.scene_GL.add(particleMesh);
 }
 
-function buildSphericalStarfield(scene) {
+App.prototype.buildSphericalStarfield = function(background) {
   var particle, material, particleMesh, geometry;
   geometry = new THREE.SphereGeometry(1, 8, 8);
   material = new THREE.MeshBasicMaterial({color: 0xffffff});
 
   var h_width = window.innerWidth/2;
   var h_height = window.innerHeight/2;
-  var depth = MAXIMUM_THRESHOLD - MINIMUM_THRESHOLD;
+  var depth = this.CONSTANTS.MAXIMUM_THRESHOLD - this.CONSTANTS.MINIMUM_THRESHOLD;
 
-  for(var i = MINIMUM_THRESHOLD; i < MAXIMUM_THRESHOLD; i++) {
+  for(var i = this.CONSTANTS.MINIMUM_THRESHOLD; i < this.CONSTANTS.MAXIMUM_THRESHOLD; i++) {
     particle = new THREE.Mesh( geometry, material );
 
     particle.scale.x = particle.scale.y = particle.scale.z = Math.random() * 1.2;
@@ -259,27 +260,27 @@ function buildSphericalStarfield(scene) {
     particle.position.y = Math.random() * window.innerHeight - h_height;
     particle.position.z = Math.random() * depth - (depth/2);
 
-    particles.push(particle);
-    scene.add(particle);
+    background.particles.push(particle);
+    background.scene_GL.add(particle);
   }
 }
 
-function buildForegroundGeometry(scene) {
-  geometry = new THREE.IcosahedronGeometry(100, 3);
+App.prototype.buildForegroundGeometry = function(foreground) {
+  var geometry = new THREE.IcosahedronGeometry(100, 3);
   geometry.mergeVertices();
 
   // get the vertices
   var l = geometry.vertices.length;
 
   // create an array to store new data associated to each vertex
-  // waves = [];
+  foreground.waves = [];
 
   for (var i=0; i<l; i++){
     // get each vertex
     var v = geometry.vertices[i];
 
     // store some data associated to it
-    waves.push({y:v.y,
+    foreground.waves.push({y:v.y,
                x:v.x,
                z:v.z,
                // a random angle
@@ -292,19 +293,20 @@ function buildForegroundGeometry(scene) {
                speed:0.016 + Math.random()*0.032
               });
   };
+
+  return geometry;
 }
 
-function updateForegroundGeometry() {
+App.prototype.updateForegroundGeometry = function(foreground) {
   // get the vertices
-  var verts = sphere.geometry.vertices;
+  var verts = foreground.sphere.geometry.vertices;
   var l = verts.length;
 
   for (var i=0; i<l; i++){
     var v = verts[i];
 
     // get the data associated to it
-    var vprops = waves[i];
-
+    var vprops = foreground.waves[i];
     // update the position of the vertex
     // v.x = vprops.x + Math.cos(vprops.ang)*vprops.amp;
     // v.y = vprops.y + Math.sin(vprops.ang)*vprops.amp;
@@ -320,23 +322,23 @@ function updateForegroundGeometry() {
   // In fact, in order to maintain the best level of performance,
   // three.js caches the geometries and ignores any changes
   // unless we add this line
-  sphere.geometry.verticesNeedUpdate=true;
+  foreground.sphere.geometry.verticesNeedUpdate=true;
 }
 
-function updateSphericalStarfield(scene) {
+App.prototype.updateSphericalStarfield = function(background) {
   var scalar_speed = 0.05;
-  particles.forEach(function(p){
-    if(p.position.z > MAXIMUM_THRESHOLD) {
-      p.position.z = MINIMUM_THRESHOLD;
-    } else if(p.position.z < MINIMUM_THRESHOLD) {
-      p.position.z = MAXIMUM_THRESHOLD;
+  background.particles.forEach(function(p){
+    if(p.position.z > this.CONSTANTS.MAXIMUM_THRESHOLD) {
+      p.position.z = this.CONSTANTS.MINIMUM_THRESHOLD;
+    } else if(p.position.z < this.CONSTANTS.MINIMUM_THRESHOLD) {
+      p.position.z = this.CONSTANTS.MAXIMUM_THRESHOLD;
     } else {
       p.position.z += scalar_speed;
     }
-  });
+  }.bind(this));
 }
 
-function buildRings(scene) {
+App.prototype.buildRings = function(foreground) {
   var ring_thickness = 2;
   var base_radius = 120;
   var radius_set = [
@@ -353,7 +355,7 @@ function buildRings(scene) {
     mesh = new THREE.Mesh(
       new THREE.RingGeometry(
         radius_set[i][0],
-        radius_set[i][0] - calcThickness(ring_thickness, i),
+        radius_set[i][0] - this.calcThickness(ring_thickness, i),
         32
       ),
       material
@@ -361,12 +363,12 @@ function buildRings(scene) {
     mesh.rotation.x = radius_set[i][1][0];
     mesh.rotation.y = radius_set[i][1][1];
     mesh.rotation.z = radius_set[i][1][2];
-    rings.push(mesh);
-    scene.add(mesh);
+    foreground.rings.push(mesh);
+    foreground.scene_GL.add(mesh);
   }
 }
 
-function calcThickness(base_factor, index) {
+App.prototype.calcThickness = function(base_factor, index) {
   if (index > 1) {
     return base_factor * Math.log(index) + 1;
   } else {
@@ -374,37 +376,37 @@ function calcThickness(base_factor, index) {
   }
 }
 
-function updateCamera() {
-  camera.position.x = mouseX;
-  camera.position.y = mouseY;
-  camera.position.z = CAMERA_DISTANCE;
-  camera.lookAt(ORIGIN);
+App.prototype.updateCamera = function() {
+  this.camera.position.x = this.mouseX;
+  this.camera.position.y = this.mouseY;
+  this.camera.position.z = this.CONSTANTS.CAMERA_DISTANCE;
+  this.camera.lookAt(this.CONSTANTS.ORIGIN);
 }
 
-function initMouseEvents(scene) {
-  document.addEventListener( 'mousemove', onMouseMove, false );
+App.prototype.initMouseEvents = function(scene_GL) {
+  document.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
 }
 
-function initWindowEvents(scene){
-  window.addEventListener('resize', onWindowResize, false);
+App.prototype.initWindowEvents = function(scene_GL){
+  window.addEventListener('resize', this.onWindowResize.bind(this), false);
 }
 
-function onMouseMove(event) {
+App.prototype.onMouseMove = function(event_GL) {
   var factor = 1000;
-  mouseX = factor * ((event.clientX / window.innerWidth) - 0.5);
-  mouseY = factor * ((event.clientY / window.innerHeight) - 0.5);
-  // window.console.log(mouseX, mouseY);
+  this.mouseX = factor * ((event_GL.clientX / window.innerWidth) - 0.5);
+  this.mouseY = factor * ((event_GL.clientY / window.innerHeight) - 0.5);
+  // window.console.log(this.mouseX, this.mouseY);
 }
 
-function onWindowResize() {
-  renderer.setPixelRatio(window.devicePixelRatio);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer2.setSize(window.innerWidth, window.innerHeight);
+App.prototype.onWindowResize = function() {
+  this.renderer_GL.setPixelRatio(window.devicePixelRatio);
+  this.camera.aspect = window.innerWidth / window.innerHeight;
+  this.camera.updateProjectionMatrix();
+  this.renderer.setSize(window.innerWidth, window.innerHeight);
+  this.renderer_CSS3D.setSize(window.innerWidth, window.innerHeight);
 }
 
-function Cpoint(inc, azi, radius){
+App.prototype.Cpoint = function(inc, azi, radius){
   // util for debgging
   if(radius == null || radius === undefined){
     var radius = Math.sqrt((650*650)*3)
@@ -414,15 +416,29 @@ function Cpoint(inc, azi, radius){
   return [radius*Math.sin(toR(inc))*Math.cos(toR(azi)), radius*Math.sin(toR(inc))*Math.sin(toR(azi)), radius*Math.cos(toR(inc))];
 }
 
-animate = function () {
+App.prototype.animate = function () {
 
-  updateForeground(scene);
-  updateBackground(scene);
+  this.updateForeground(this.foreground);
+  this.updateBackground(this.background);
+  this.updateCamera();
 
-  renderer2.render(scene2, camera);
-  renderer.render(scene, camera);
+  this.renderer_CSS3D.render(this.scene_CSS3D, this.camera);
+  this.renderer_GL.render(this.scene_GL, this.camera);
 
-  requestAnimationFrame(animate);
+  requestAnimationFrame(this.animate.bind(this));
 };
 
-ready(init, [document.body]);
+function Foreground(scene_GL, scene_CSS3D){
+  this.scene_GL = scene_GL;
+  this.scene_CSS3D = scene_CSS3D;
+  this.waves = new Array();
+  this.sphere;
+  this.rings = new Array();
+}
+function Background(scene_GL, scene_CSS3D){
+  this.scene_GL = scene_GL;
+  this.scene_CSS3D = scene_CSS3D;
+  this.particles = new Array();
+}
+
+ready(start, [document.body]);
