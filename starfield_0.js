@@ -23,7 +23,7 @@ function App(root) {
     STARDRIFT_SPEED: 1.05,
     DEPTH: 2000,
     CAMERA_DISTANCE: 500,
-    DOLLY_SPEED: 2
+    DOLLY_SPEED: 1
   }
   this.root = root;
   this.dollyPathCoordinates = [
@@ -121,11 +121,12 @@ App.prototype.initDollyRide = function() {
   window.console.log("dolly started");
   this.dollyPath = new DollyPath(this.dollyPathCoordinates);
   this.dollyDir = new THREE.Vector3();
-
+  window.cam = this.camera;
   // iterate over coordinates and update camera
+  this.dollyTo(this.dollyPath.next());
   this.dollyId = window.setInterval(function() {
     this.dollyTo(this.dollyPath.next());
-  }.bind(this), 3000);
+  }.bind(this), 15000);
 }
 
 App.prototype.dollyTo = function(new_loc) {
@@ -506,7 +507,7 @@ App.prototype.animate = function () {
 function DollyPath(coords){
   var index = 0;
   var coords = coords;
-  var currentLoc;
+  var currentLoc = new THREE.Vector3();
 
   function next() {
     if (coords.length < 1){
