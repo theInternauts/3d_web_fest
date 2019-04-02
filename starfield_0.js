@@ -22,9 +22,16 @@ function App(root) {
     STARCOUNT: 4000,
     STARDRIFT_SPEED: 1.05,
     DEPTH: 2000,
-    CAMERA_DISTANCE: 500
+    CAMERA_DISTANCE: 500,
+    DOLLY_SPEED: 2
   }
   this.root = root;
+  this.dollyPathCoordinates = [
+    this.randomVector3("world"),
+    this.randomVector3("world"),
+    this.randomVector3("world"),
+    this.randomVector3("world")
+  ];
 
 
   window.console.log("yep", this.root);
@@ -70,7 +77,69 @@ App.prototype.init = function() {
   this.buildBackground(this.background);
   this.initWindowEvents(this.scene_GL);
   this.initMouseEvents(this.scene_GL);
+  this.initDollyRide();
 };
+
+App.prototype.randomLocation = function(dimension, threshold) {
+  var value;
+  switch(dimension.toLowerCase()){
+    case 'x':
+      value = Math.random() * threshold - (threshold/2)
+      break;
+    case 'y':
+      value = Math.random() * threshold - (threshold/2)
+      break;
+    case 'z':
+      value = Math.random() * threshold - (threshold/2)
+      break;
+  }
+  return value;
+}
+
+App.prototype.randomVector3 = function(type) {
+  var vector;
+  switch (type.toLowerCase()) {
+    case 'window':
+      vector = new THREE.Vector3(
+        this.randomLocation("X", window.innerWidth),
+        this.randomLocation("Y", window.innerHeight),
+        this.randomLocation("Z", this.CONSTANTS.DEPTH)
+      )
+      break;
+    case 'world':
+      vector = new THREE.Vector3(
+        this.randomLocation("X", 360),
+        this.randomLocation("Y", 360),
+        this.CONSTANTS.CAMERA_DISTANCE
+      )
+      break;
+  }
+  return vector;
+}
+
+App.prototype.initDollyRide = function() {
+  window.console.log("dolly started");
+  this.dollyPath = new DollyPath(this.dollyPathCoordinates);
+  this.dollyDir = new THREE.Vector3();
+
+  // iterate over coordinates and update camera
+  this.dollyId = window.setInterval(function() {
+    this.dollyTo(this.dollyPath.next());
+  }.bind(this), 3000);
+}
+
+App.prototype.dollyTo = function(new_loc) {
+  window.console.log("moving to: ", new_loc);
+  this.dollyDir.subVectors(this.dollyPath.current(), this.camera.position).normalize();
+}
+
+App.prototype.updateDollyPosition = function() {
+  if(this.dollyId && this.dollyDir && this.dollyPath.current()){
+    this.camera.translateOnAxis(this.dollyDir, this.CONSTANTS.DOLLY_SPEED);
+    this.camera.lookAt(this.CONSTANTS.ORIGIN);
+  }
+}
+
 App.prototype.buildGLRenderer = function() {
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   // renderer.setClearColor(0x0c345c);
@@ -387,6 +456,9 @@ App.prototype.updateCamera = function() {
 
 App.prototype.initMouseEvents = function(scene_GL) {
   document.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+  document.addEventListener( 'dblclick', (function(){
+    console.log("CAM:" , this.camera.position);
+  }).bind(this), false );
 }
 
 App.prototype.initWindowEvents = function(scene_GL){
@@ -397,6 +469,7 @@ App.prototype.onMouseMove = function(event_GL) {
   var factor = 1000;
   this.mouseX = factor * ((event_GL.clientX / window.innerWidth) - 0.5);
   this.mouseY = factor * ((event_GL.clientY / window.innerHeight) - 0.5);
+  this.updateCamera();
   // window.console.log(this.mouseX, this.mouseY);
 }
 
@@ -422,13 +495,44 @@ App.prototype.animate = function () {
 
   this.updateForeground(this.foreground);
   this.updateBackground(this.background);
-  this.updateCamera();
+  this.updateDollyPosition();
 
   this.renderer_CSS3D.render(this.scene_CSS3D, this.camera);
   this.renderer_GL.render(this.scene_GL, this.camera);
 
   requestAnimationFrame(this.animate.bind(this));
 };
+
+function DollyPath(coords){
+  var index = 0;
+  var coords = coords;
+  var currentLoc;
+
+  function next() {
+    if (coords.length < 1){
+      currentLoc = false;
+    } else {
+      if (index < coords.length && index >= 0){
+        currentLoc = coords[index];
+      } else {
+        index = 0;
+        currentLoc = coords[index];
+      }
+      index += 1;
+    }
+
+    return currentLoc;
+  }
+
+  function current() {
+    return currentLoc;
+  }
+
+  return {
+    next: next,
+    current: current
+  }
+}
 
 function Foreground(scene_GL, scene_CSS3D){
   this.scene_GL = scene_GL;
