@@ -19,6 +19,9 @@ function App(root) {
     ORIGIN: new THREE.Vector3(0,0,0),
     MAXIMUM_THRESHOLD: 1000,
     MINIMUM_THRESHOLD: -1000,
+    STARCOUNT: 4000,
+    STARDRIFT_SPEED: 1.05,
+    DEPTH: 2000,
     CAMERA_DISTANCE: 500
   }
   this.root = root;
@@ -249,16 +252,15 @@ App.prototype.buildSphericalStarfield = function(background) {
 
   var h_width = window.innerWidth/2;
   var h_height = window.innerHeight/2;
-  var depth = this.CONSTANTS.MAXIMUM_THRESHOLD - this.CONSTANTS.MINIMUM_THRESHOLD;
 
-  for(var i = this.CONSTANTS.MINIMUM_THRESHOLD; i < this.CONSTANTS.MAXIMUM_THRESHOLD; i++) {
+  for(var i = 0; i < this.CONSTANTS.STARCOUNT; i++) {
     particle = new THREE.Mesh( geometry, material );
 
     particle.scale.x = particle.scale.y = particle.scale.z = Math.random() * 1.2;
 
-    particle.position.x = Math.random() * window.innerWidth - h_width;
-    particle.position.y = Math.random() * window.innerHeight - h_height;
-    particle.position.z = Math.random() * depth - (depth/2);
+    particle.position.x = 1.5*(Math.random() * window.innerWidth - h_width);
+    particle.position.y = 1.5*(Math.random() * window.innerHeight - h_height);
+    particle.position.z = Math.random() * this.CONSTANTS.DEPTH - (this.CONSTANTS.DEPTH/2);
 
     background.particles.push(particle);
     background.scene_GL.add(particle);
@@ -326,15 +328,15 @@ App.prototype.updateForegroundGeometry = function(foreground) {
 }
 
 App.prototype.updateSphericalStarfield = function(background) {
-  var scalar_speed = 0.05;
   background.particles.forEach(function(p){
-    if(p.position.z > this.CONSTANTS.MAXIMUM_THRESHOLD) {
-      p.position.z = this.CONSTANTS.MINIMUM_THRESHOLD;
-    } else if(p.position.z < this.CONSTANTS.MINIMUM_THRESHOLD) {
-      p.position.z = this.CONSTANTS.MAXIMUM_THRESHOLD;
+    if(p.position.z > this.CONSTANTS.MAXIMUM_THRESHOLD && this.CONSTANTS.STARDRIFT_SPEED > 0) {
+      p.position.z = Math.random() * -1 * this.CONSTANTS.DEPTH - this.CONSTANTS.DEPTH;
+    } else if(p.position.z < this.CONSTANTS.MINIMUM_THRESHOLD && this.CONSTANTS.STARDRIFT_SPEED < 0) {
+      p.position.z = Math.random() * this.CONSTANTS.DEPTH + this.CONSTANTS.DEPTH;
     } else {
-      p.position.z += scalar_speed;
+      p.position.z += this.CONSTANTS.STARDRIFT_SPEED;
     }
+
   }.bind(this));
 }
 
