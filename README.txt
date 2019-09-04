@@ -10,3 +10,4 @@
 [ ] camera dolly path
 [ ] nebulous clouds?
 [x] video overlay?
+[ ] web vr?
