@@ -1,0 +1,7 @@
+//References:
+// https://threejs.org/examples/#webgl_materials_cubemap_dynamic
+// https://threejs.org/examples/#webgl_materials
+// https://codepen.io/tr13ze/pen/pbjWwg
+
+//http://codereply.com/answer/83pofc/threejs-properly-blending-css3d-webgl.html
+//http://learningthreejs.com/blog/2013/04/30/closing-the-gap-between-html-and-webgl/
